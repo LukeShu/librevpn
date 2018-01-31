@@ -65,7 +65,7 @@ La construcción de las páginas del manual también requiere el programa pandoc
 
 ## Desarrolladoras
 
-Ver _doc/CONVENCIONES.markdown_.
+Ver [CONVENCIONES](doc/es/CONVENCIONES.markdown).
 
 ## Wiki
 

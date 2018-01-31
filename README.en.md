@@ -64,7 +64,7 @@ Building the man pages also requires the pandoc program.
 
 ## Developers
 
-See _doc/CONVENTIONS.markdown_.
+See [CONVENTIONS](doc/en/CONVENTIONS.markdown).
 
 ## Wiki
 
