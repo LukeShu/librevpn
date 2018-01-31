@@ -58,6 +58,8 @@ necesitar.
 
 ## Instalación en el sistema
 
+La construcción de las páginas del manual también requiere el programa pandoc.
+
     sudo make install PREFIX=/usr
 
 
