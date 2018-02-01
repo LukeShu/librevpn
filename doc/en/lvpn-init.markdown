@@ -43,7 +43,7 @@ lvpn init [-A] [-f] [-q] [-p 655] [-l 192.168.9.202/32] [-s 10.4.24.128/27] [-r]
      need to start over.  All data is lost!
 
 -p 655
-:    Port number, default is 655 o *LVPN_PORT* env var.
+:    Port number, default is 655 or *LVPN_PORT* env var.
 
 -s 10.0.0.0
 :    Announce another subnet (deprecated)

@@ -4,119 +4,120 @@
 
 # NAME
 
-Notas para desarrolladores de lvpn :)
+Notes for lvpn developers :)
 
 
 # SYNOPSIS
 
 lib/
-:    comandos
+:    commands
 
 lib/skel/
-:    archivos base para tinc
+:    base files for tinc
 
 lib/skel/scripts/
-:    directorio de scripts/hooks
+:    directory of scripts/hooks
 
 doc/
-:    documentación
+:    documentation
 
 bin/
-:    programas de ayuda que no son especificamente de lvpn
+:    helper programs that are not specifically for lvpn
 
 etc/
-:    código fuente extra
+:    extra source code
 
 hosts/
-:    archivos de nodos
+:    node files
 
 nodos/
-:    nodos propios
+:    your own nodes
 
 locale/
-:    traducciones
+:    translations
 
 
 # DESCRIPTION
 
-## Dónde van los scripts
+## Where scripts go
 
-El script _lvpn_ autodescubre los comandos siguiendo la convención
-_lib/lvpn-tuscript_.  Además setea algunas variables de entorno que los
-scripts pueden usar para saber en qué red están trabajando.
+The script _lvpn_ autodetects the commands following the
+_lib/lvpn-yourscript_ convention.  It also sets some environment
+variables that the scripts can use to know which network they are
+working on.
 
-Los scripts pueden estar en cualquier lenguaje de programación mientras
-sepan leer esas variables de entorno.
+The scripts can be in any programming language as long as they can
+read those environment variables.
 
 
-## Variables de entorno
+## Environment variables
 
-Estas son las variables de entorno que _lvpn_ exporta para el resto de los
-comandos.
+These are the environment variables that lvpn exports for the rest of
+the commands.
 
 TINC
-:    Ubicación del directorio del nodo, por defecto _/etc/tinc/lvpn_.
+:    Location of the node directory, by default _/etc/tinc/lvpn_.
 
 NETWORK
-:    Nombre de la red, por defecto el último directorio de _TINC_.
+:    Name of the network, by default the last directory of _TINC_.
 
 LVPN
-:    Path completo de _lvpn_.
+:    Absolute path of _lvpn_.
 
 LVPN\_DIR
-:    Path completo del directorio de trabajo, por defecto el directorio
-     base de _LVPN_
+:    Absolute path of the working directory, by default the base directory of _LVPN_
 
 LVPN\_LIBDIR
-:    Path completo del directorio de comandos.
+:    Absolute path of the directory of commands.
 
 LVPN\_HOSTS
-:    Path completo del directorio de hosts.
+:    Absolute path of the directory of hosts.
 
 LVPN\_BEADLE
-:    Path completo del directorio de llaves anunciables nuevas de desconocidos.
+:    Absolute path of new advertised keys from strangers.
 
 KEYSIZE
-:    Tamaño por defecto de las llaves.
+:    Default key size.
 
 LVPN\_SUBNET
-:    El rango de IPv4
+:    The IPv4 subnet range
 
 LVPN\_SUBNET6
-:    El rango de IPv6
+:    The IPv6 subnet range
 
 TINCD\_FLAGS
-:    Flags para el demonio _tincd_.
+:    Flags for the _tincd_ daemon.
 
 PORT
-:    Puerto por defecto
+:    Default port
 
 sudo
-:    Usar esta variable delante de cualquier comando que deba correr con
-     privilegios de root, ej: _${sudo} rsync_.  Requiere _"root=true"_ al
-     principio del script.
+:    Use this variable in front of any command that must run with root
+     privileges, eg: _${sudo} rsync_.  Requires _"root=true"_ at the
+     beginning of the script.
 
 
-## Dónde va la documentación
+## Where is the documentation
 
-La documentación lleva el nombre completo del script:
-_doc/idioma/lvpn-tuscript.markdown_.  La función _help()_ en _lib/msg_
-lo lleva como argumento para mostrar la ayuda.
+The documentation documentación carries the full name of the script:
+_doc/language/lvpn-yourscript.markdown_.  The function _help()_ in
+_lib/msg_ takes the script name as an argument to show this
+documentation.
 
-Además, toma la variable de entorno _PAGER_ para paginar la salida, por
-defecto se usa _less_.
+Also, it takes the _PAGER_ environment variable to paginate the
+output, by it uses _less_.
 
 
-## Flags y parámetros
+## Flags and arguments
 
-_lvpn comando_ -flags nodolocal parametros extra
+_lvpn command_ -flags localnode extra arguments
 
-Seguido de _lvpn_ viene el comando, al que se le pasan en orden las flags (con
-sus opciones).  El primer parámetro siempre tiene que ser el nodo local en el
-que se realiza la acción.  Luego vienen los parámetros extra (nombres de otros
-nodos, por ejemplo).
+Following _lvpn_ comes the command, to which flags are passed in order
+(with their options).  The first extra argument always has to be the
+local node where the action is performed.  Then come the extra
+arguments (names of other nodes, for example).
 
-## Funciones comunes
+## Common functions
 
 En el archivo _lib/common_ se almacenan las funciones de uso común entre todos
 los comandos.  Se la puede incluir en un script añadiendo la línea
@@ -163,7 +164,7 @@ root.
 * _get\_ipv6()_: Genera una dirección IPv6 a partir de LVPN_SUBNET6.
 
 
-## Mensajes
+## Messages
 
 En _lib/msg_ se encuentran las funciones básicas para imprimir mensajes en la
 salida de errores estándar.  Esto es para que no sean procesados como la salida
