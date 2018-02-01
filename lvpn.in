@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# lvpn.in
+# lvpn
 #
 # Copyright (c) 2011-2013 LibreVPN <vpn@hackcoop.com.ar>
 #
@@ -21,7 +21,6 @@
 # <http://www.gnu.org/licenses/>.
 #
 #
-# Versión autogenerada
 # Wrapper para correr los comandos al estilo `git comando parametros`
 # Hay que crearlos en libdir/lvpn-comando
 
@@ -30,9 +29,9 @@
 # o de la shell) o usar directorios locales
 TINC="${TINC:-"@TINC@"}"
 NETWORK="${NETWORK:-"@NETWORK@"}"
-LVPN="@LVPN@"
-# Guardar todo en el ~/.config del usuario local
-LVPN_DIR="${XDG_CONFIG_HOME:-${HOME}/.config}/${NETWORK}"
+LVPN="$(readlink -f $0)"
+
+LVPN_DIR="${LVPN_DIR:-"@LVPN_DIR@"}"
 LVPN_CONTRIB="${LVPN_CONTRIB:-"@CONTRIB@"}"
 LVPN_LIBDIR="${LVPN_LIBDIR:-"@LIBDIR@"}"
 LVPN_HOSTS="${LVPN_HOSTS:-"@HOSTS@"}"
@@ -54,6 +53,8 @@ export TINC NETWORK LVPN \
        LVPN_DIR LVPN_CONTRIB LVPN_LIBDIR LVPN_HOSTS \
        KEYSIZE TEXTDOMAINDIR TEXTDOMAIN \
        LVPN_SUBNET LVPN_SUBNET6 TINCD_FLAGS PORT
+
+export PATH="${LVPN_DIR}/bin:$PATH"
 
 . "${LVPN_LIBDIR}/common"
 
