@@ -157,8 +157,10 @@ install: PHONY all $(inst_progs) $(inst_hosts) $(inst_man) $(inst_trans)
 # Actual make rules ############################################################
 
 # Reemplazar todas las variables en los .in y pasarlas a los .out
-%.out: %.in
-	sed -e 's,@NETWORK@,$(NETWORK),g' \
+
+define EDIT
+	sed -e 's,@LVPN_DIR@,$(LVPN_DIR),g' \
+	    -e 's,@NETWORK@,$(NETWORK),g' \
 	    -e 's,@LIBDIR@,$(LIBDIR),g' \
 	    -e 's,@DOC@,$(DOC),g' \
 	    -e 's,@CONTRIB@,$(CONTRIB),g' \
@@ -172,10 +174,26 @@ install: PHONY all $(inst_progs) $(inst_hosts) $(inst_man) $(inst_trans)
 	    -e 's,@SUBNET@,$(SUBNET),g' \
 	    -e 's,@SUBNET6@,$(SUBNET6),g' \
 	    -e 's,@TEXTDOMAINDIR@,$(TEXTDOMAINDIR),g' \
-	    -e 's,@TEXTDOMAIN@,$(TEXTDOMAIN),g' \
-	    '$<' > '$@'
+	    -e 's,@TEXTDOMAIN@,$(TEXTDOMAIN),g'
+endef
+
+lvpn.out: private LVPN_DIR = $${XDG_CONFIG_HOME:-$${HOME}/.config}/$${NETWORK}
+lvpn.out: %.out: %.in
+	$(EDIT) < '$<' > '$@'
 $(TARGET)$(PREFIX)/bin/%: %.out
 	install -Dm755 '$<' '$@'
+
+lvpn: private PREFIX     := /usr
+lvpn: private TINC       := $(TINC)
+lvpn: private TEXTDOMAIN := $(TEXTDOMAIN)
+lvpn: private LVPN_DIR   := $$(dirname "$$LVPN")
+lvpn: private CONTRIB    := $${LVPN_DIR}/contrib
+lvpn: private LIBDIR     := $${LVPN_DIR}/lib
+lvpn: private HOSTS      := $${LVPN_DIR}/hosts
+lvpn: private BEADLE     := $${LVPN_DIR}/beadle
+lvpn: private NETWORK    := $$(basename "$${TINC}")
+lvpn: %: %.in
+	$(EDIT) < '$<' | install -m755 /dev/stdin '$@'
 
 # How to generate man pages
 %.1: %.markdown
