@@ -1,4 +1,4 @@
-% LVPN-UNKNOWN-PEERS(1) Manual de LibreVPN | lvpn
+% LVPN-UNKNOWN-PEERS(1) LibreVPN Manual | lvpn
 % Nicolás Reynolds <fauno@endefensadelsl.org>
 % 2013
 

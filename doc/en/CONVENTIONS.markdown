@@ -1,4 +1,4 @@
-% CONVENCIONES(2) Manual de LibreVPN | lvpn
+% CONVENTIONS(2) LibreVPN Manual | lvpn
 % Nicolás Reynolds <fauno@endefensadelsl.org>
 % 2013
 

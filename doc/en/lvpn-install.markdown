@@ -1,4 +1,4 @@
-% LVPN-INSTALL(1) Manual de LibreVPN | lvpn
+% LVPN-INSTALL(1) LibreVPN Manual | lvpn
 % Nicolás Reynolds <fauno@endefensadelsl.org>
 % 2013
 

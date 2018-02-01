@@ -1,4 +1,4 @@
-% LVPN-AVAHI-ANUNCIO.MARKDOWN(1) Manual de LibreVPN | lvpn
+% LVPN-AVAHI-ANUNCIO.MARKDOWN(1) LibreVPN Manual | lvpn
 % Nicolás Reynolds <fauno@endefensadelsl.org>
 % 2013
 

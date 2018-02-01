@@ -1,4 +1,4 @@
-% LVPN-UPDATE-SKEL(1) Manual de LibreVPN | lvpn
+% LVPN-UPDATE-SKEL(1) LibreVPN Manual | lvpn
 % Nicolás Reynolds <fauno@endefensadelsl.org>
 % 2013
 

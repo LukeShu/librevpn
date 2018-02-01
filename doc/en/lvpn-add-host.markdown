@@ -1,4 +1,4 @@
-% LVPN-ADD-HOST(1) Manual de LibreVPN | LibreVPN
+% LVPN-ADD-HOST(1) LibreVPN Manual | LibreVPN
 % Nicolás Reynolds <fauno@endefensadelsl.org>
 % 2013
 
