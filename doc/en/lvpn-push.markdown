@@ -1,4 +1,4 @@
-% LVPN-PUSH(1) Manual de LibreVPN | lvpn
+% LVPN-PUSH(1) LibreVPN Manual | lvpn
 % Nicolás Reynolds <fauno@endefensadelsl.org>
 % 2013
 
