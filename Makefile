@@ -181,6 +181,7 @@ $(TARGET)$(PREFIX)/bin/%: %.out
 %.1: %.markdown
 	pandoc --standalone \
 	       --output='$@' \
+	       --from=markdown-smart \
 	       --to=man \
 	       '$<'
 # How to install man pages. We have to loop over the supported languages to
