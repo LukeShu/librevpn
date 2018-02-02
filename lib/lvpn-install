@@ -86,8 +86,9 @@ find_init_system | while read init_system init_file; do
     systemd)
 # Instalar el .service desde el skel
       sed "s/{{TINCD_FLAGS}}/${TINCD_FLAGS}/g" \
-           ${LVPN_LIBDIR}/skel/tincd@.service | \
-           ${sudo} tee ${init_file} >/dev/null
+          < ${LVPN_LIBDIR}/skel/tincd@.service \
+          | ${sudo} tee /etc/systemd/system/tincd@${NETWORK}.service >/dev/null
+      ${sudo} systemctl enable tincd@${NETWORK}.service
       ;;
     unknown)
       warning "Tu sistema de inicio de tinc es desconocido, tenés que habilitar el demonio a mano o reportar un bug :)" ;;
