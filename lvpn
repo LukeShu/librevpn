@@ -21,7 +21,6 @@
 # <http://www.gnu.org/licenses/>.
 #
 #
-# Versión autónoma
 # Wrapper para correr los comandos al estilo `git comando parametros`
 # Hay que crearlos en libdir/lvpn-comando
 
@@ -29,14 +28,14 @@
 # Tomar las variables de entorno (por ejemplo de un archivo de configuración
 # o de la shell) o usar directorios locales
 TINC="${TINC:-"/etc/tinc/lvpn"}"
-NETWORK="$(basename "${TINC}")"
+NETWORK="${NETWORK:-"$(basename "${TINC}")"}"
 LVPN="$(readlink -f $0)"
 
-LVPN_DIR="${LVPN_DIR:-$(dirname "$LVPN")}"
+LVPN_DIR="${LVPN_DIR:-"$(dirname "$LVPN")"}"
 LVPN_CONTRIB="${LVPN_CONTRIB:-"${LVPN_DIR}/contrib"}"
-LVPN_LIBDIR="${LVPN_LIBDIR:-${LVPN_DIR}/lib}"
-LVPN_HOSTS="${LVPN_HOSTS:-${LVPN_DIR}/hosts}"
-LVPN_BEADLE="${LVPN_HOSTS:-${LVPN_DIR}/beadle}"
+LVPN_LIBDIR="${LVPN_LIBDIR:-"${LVPN_DIR}/lib"}"
+LVPN_HOSTS="${LVPN_HOSTS:-"${LVPN_DIR}/hosts"}"
+LVPN_BEADLE="${LVPN_HOSTS:-"${LVPN_DIR}/beadle"}"
 KEYSIZE=${KEYSIZE:-4096}
 # Flags para 
 TINCD_FLAGS="${TINCD_FLAGS:-"--logfile -U nobody"}"
@@ -48,7 +47,7 @@ LVPN_SUBNET6="${LVPN_SUBNET6:-"2001:1291:200:83ab::/64"}"
 
 # Para gettext
 TEXTDOMAINDIR=${TEXTDOMAINDIR:-"/usr/share/locale"}
-TEXTDOMAIN="$(basename "${LVPN}")"
+TEXTDOMAIN="lvpn"
 
 export TINC NETWORK LVPN \
        LVPN_DIR LVPN_CONTRIB LVPN_LIBDIR LVPN_HOSTS \
