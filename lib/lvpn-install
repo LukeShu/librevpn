@@ -73,27 +73,30 @@ ${sudo} find "${TINC}/scripts" -type f -exec chmod 755 {} \;
 ${sudo} chmod 600 "${TINC}/rsa_key.priv"
 
 # Habilitar tinc en el sistema
-find_init_system | while read init_system init_file; do
-  case $init_system in
-   deb)
-      grep -q ${NETWORK} "${init_file}" || \
-      $sudo sh -c "echo ${NETWORK} >>${init_file}"
-
-# Habilitar el log y cambiar a un usuario sin privilegios
-      grep -q "^EXTRA=" /etc/default/tinc || \
-      $sudo sh -c "echo 'EXTRA=\"${TINCD_FLAGS}\"' >>/etc/default/tinc"
-      ;;
-    systemd)
-# Instalar el .service desde el skel
-      sed "s/{{TINCD_FLAGS}}/${TINCD_FLAGS}/g" \
-          < ${LVPN_LIBDIR}/skel/tincd@.service \
-          | ${sudo} tee /etc/systemd/system/tincd@${NETWORK}.service >/dev/null
-      ${sudo} systemctl enable tincd@${NETWORK}.service
-      ;;
-    unknown)
-      warning "Tu sistema de inicio de tinc es desconocido, tenés que habilitar el demonio a mano o reportar un bug :)" ;;
-  esac
-done
+if [ -f /etc/debian_version ]; then
+  # Assume we're using Debian initscripts
+  if ! grep -q "${NETWORK}" /etc/tinc/nets.boot; then
+    $sudo sh -c "echo ${NETWORK} >>/etc/tinc/nets.boot"
+  fi
+  if ! grep -q "^EXTRA=" /etc/default/tinc; then
+    $sudo sh -c "echo 'EXTRA=\"${TINCD_FLAGS}\"' >>/etc/default/tinc"
+  fi
+elif type systemctl &>/dev/null; then
+  # Looks like we have systemd
+  if systemctl cat tinc@.service &>/dev/null && systemctl cat tinc.service &>/dev/null; then
+    # Use the system-provided unit files.
+    # This does NOT obey TINCD_FLAGS.
+    ${sudo} systemctl enable tinc.service tinc@${NETWORK}.service
+  else
+    # Use our unit file.
+    sed "s/{{TINCD_FLAGS}}/${TINCD_FLAGS}/g" \
+        < ${LVPN_LIBDIR}/skel/tincd@.service \
+        | ${sudo} tee /etc/systemd/system/tincd@${NETWORK}.service >/dev/null
+    ${sudo} systemctl enable tincd@${NETWORK}.service
+  fi
+else
+  warning "Tu sistema de inicio de tinc es desconocido, tenés que habilitar el demonio a mano o reportar un bug :)" ;;
+fi
 
 # Agregar avahi en nsswitch.conf
 if [ -f /lib/libnss_mdns.so.2 ]; then

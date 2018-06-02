@@ -1,0 +1,43 @@
+#!/bin/sh
+
+# The variables that tincd sets for the `tinc-up` script are:
+#
+# - NETNAME - : The network name (lvpn).
+# - NAME ---- : This node's name.
+# - DEVICE -- : The virtual network device.
+# - INTERFACE : The virtual network interface.
+
+# Estas IPs las genera lib/lvpn-update-skel
+LVPN_SUBNET6="@LVPN_SUBNET6@"
+LVPN_SUBNET4="@LVPN_SUBNET4@"
+HOST_FILE="/etc/tinc/${NETNAME}/hosts/${NAME}"
+
+# Tomar la IP desde el archivo de configuración y descartar el prefijo
+get_ip() {
+	< "$HOST_FILE" \
+	  sed -n '/^Subnet\s*=/s/^[^=]*=\s*//p' \
+	| sed -n -e '/\./s,/32$,,p' -e '/:/s,/128$,,p'
+}
+
+# Obtener las IPs del archivo de conf y agregar los prefijos de subnet
+# originales
+LVPN_ADDR6="$(get_ip "${LVPN_SUBNET6%%'*'*}.*/128")/${LVPN_SUBNET6##*/}"
+LVPN_ADDR4="$(get_ip "${LVPN_SUBNET4%%'*'*}.*/32" )/${LVPN_SUBNET4##*/}"
+
+# No aceptar IPv6 desde otro lado
+sysctl -w net.ipv6.conf.${INTERFACE}.accept_ra=0
+
+# Soporte para cosas deprecadas: IPv4 e ifconfig
+if type ip &>/dev/null; then
+  test ! -z "${LVPN_ADDR6}" && ip address add ${LVPN_ADDR4} dev ${INTERFACE}
+  test ! -z "${LVPN_ADDR4}" && ip address add ${LVPN_ADDR6} dev ${INTERFACE}
+
+  ip link set ${INTERFACE} up
+else
+  test ! -z "${LVPN_ADDR6}" && ifconfig ${INTERFACE} ${LVPN_ADDR6}
+  test ! -z "${LVPN_ADDR4}" && ifconfig ${INTERFACE} ${LVPN_ADDR4}
+
+  ifconfig ${INTERFACE} up
+fi
+
+. /etc/tinc/${NETNAME}/run-script

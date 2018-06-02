@@ -2,7 +2,6 @@
 # root <root@parabola.nu>
 Address = parabola.nu
 Port = 655
-LocalDiscovery = yes
 Subnet = 192.168.9.27/32
 Subnet = 2001:1291:200:83ab:9451:92d7:dbbf:f882/128
 

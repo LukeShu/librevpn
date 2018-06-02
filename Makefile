@@ -39,8 +39,8 @@ KEYSIZE ?= 4096
 PORT ?= 655
 
 # Las subredes
-SUBNET ?= 192.168.9.0/24
-SUBNET6 ?= 2001:1291:200:83ab::/64
+SUBNET4 ?= 192.168.9.*/24
+SUBNET6 ?= 2001:1291:200:83ab:*/64
 
 # Sub-projects to optionally build
 #BUILD_UPNPC = true
@@ -171,7 +171,7 @@ define EDIT
 	    -e 's,@FLAGS@,$(FLAGS),g' \
 	    -e 's,@KEYSIZE@,$(KEYSIZE),g' \
 	    -e 's,@PORT@,$(PORT),g' \
-	    -e 's,@SUBNET@,$(SUBNET),g' \
+	    -e 's,@SUBNET4@,$(SUBNET4),g' \
 	    -e 's,@SUBNET6@,$(SUBNET6),g' \
 	    -e 's,@TEXTDOMAINDIR@,$(TEXTDOMAINDIR),g' \
 	    -e 's,@TEXTDOMAIN@,$(TEXTDOMAIN),g'

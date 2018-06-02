@@ -28,48 +28,48 @@
 requires tincd
 
 # Opciones
-# ConnectTo
-connectto=""
-# Address
-address=""
-# Port
-port=""
-# Subnets extra (-s)
-subnets=""
-# Instalar
-install=false
-# Habilitar subnet-up (-r)
-subnetup=false
-# Modo verborrágico por defecto
-verbose=true
-force=false
-# Soporte para android
-android=false
+arg_localnets=()   # -l
+arg_connectto=()   # -c
+arg_addresses=()   # -a
+arg_subnets=()     # -s (deprecated)
+arg_port=""        # -p
+arg_install=false  # -i
+arg_subnetup=false # -r (deprecated)
+arg_verbose=true   # -q
+arg_force=false    # -f
+arg_android=false  # -A
 
 # Procesar los flags (ver doc)
 while getopts 'dvhirfp:a:c:s:l:A' arg; do
-    case $arg in
-        h) help $self; exit 0 ;;
-        q) verbose=false ;;
-        r) subnetup=true ;;
-        i) install=true;;
-        f) force=true ;;
-        p) port="$OPTARG" ;;
-        l) localnet="${localnet} $OPTARG" ;;
-        a) address="${address} $OPTARG" ;;
-        c) connectto="$connectto $OPTARG" ;;
-        s) subnets="$subnets $OPTARG" ;;
-        A) android=true ;;
-    esac
+	case $arg in
+		h) help $self; exit 0 ;;
+
+		l) arg_localnets+=("$OPTARG") ;;
+		a) arg_addresses+=("$OPTARG") ;;
+		c) arg_connectto+=("$OPTARG") ;;
+		s) arg_subnets+=("$OPTARG") ;;
+
+		p) port="$OPTARG" ;;
+
+		q) arg_verbose=false ;;
+		r) arg_subnetup=true ;;
+		i) arg_install=true;;
+		f) arg_force=true ;;
+		A) arg_android=true ;;
+
+		'?') exit 1 ;;
+	esac
 done ;
 let OPTIND--; shift $OPTIND
+arg_nodename=${1:-$HOSTNAME}
+if [ -z "${arg_nodename}" ]; then
+	fatal_error "Se necesita un nombre de nodo"
+fi
+
+######################################################################
 
 # Obtener el nombre del host
-nodename="$(get_node_name "${1:-$HOSTNAME}")"
-
-if [ -z "${nodename}" ]; then
-    fatal_error "Se necesita un nombre de nodo"
-fi
+nodename="$(get_node_name "${arg_nodename}")"
 
 # Podríamos usar get_node_dir pero chequea si ya existe, cosa que no
 nodedir="${LVPN_DIR}/nodos/${nodename}"
@@ -78,123 +78,130 @@ conffile="${nodedir}/tinc.conf"
 
 # Con -f se eliminan los archivos anteriores
 if $force; then
-    rm -r "${nodefile}" "${nodedir}" || true
+	rm -r "${nodefile}" "${nodedir}" || true
 fi
 
-$verbose && msg "Creando %s..." "*${nodename}*"
+$arg_verbose && msg "Creando %s..." "*${nodename}*"
 if [ -f "${nodefile}" ]; then
-    fatal_error "El nodo ya existe! Utilice -f para re-crearlo"
+	fatal_error "El nodo ya existe! Utilice -f para re-crearlo"
 fi
 
-$verbose && msg "Creando %s..." "*${nodedir}*"
+$arg_verbose && msg "Creando %s..." "*${nodedir}*"
 if [ -d "${nodedir}" ]; then
-    fatal_error "El directorio del nodo ya existe"
+	fatal_error "El directorio del nodo ya existe"
 fi
 
 # Crea los directorios de hosts y scripts
 mkdir -p ${nodedir}/{hosts,scripts} || fatal_error "No se pudo crear el directorio"
 
-$verbose && msg "Generando %s..." "*${nodefile}*"
-add_to_file "${nodefile}" "# ${nodename}"
-get_id >>"${nodefile}"
-
-if [ ! -z "${address}" ]; then
-  for _a in ${address}; do
-    add_to_file "${nodefile}" "Address = ${_a}"
-  done
-else
-  $verbose && warning "El nodo no tiene una dirección pública, se configura como cliente"
-# Cuando no tenemos una dirección pública probablemente estemos detrás
-# de un firewall, esto le indica a los demás nodos que no traten de
-# conectarse directamente sino que nos envíen paquetes a través de un
-# nodo al que estemos conectados.
-  add_to_file "${nodefile}" "IndirectData = yes"
-
-  PORT=$(until test ${r:-0} -gt 20000; do r=${RANDOM}; done; echo $r)
-  $verbose && msg "Utilizando puerto al azar %s" "*${PORT}*"
+if [ -n "${LVPN_SUBNET}" ]; then
+	$arg_verbose && msg "Determinando la IPv4 del nodo..."
+	if [ ${#arg_localnets[@]} = 0 ] ; then
+		if ! arg_localnets+=($(get_ipv4)); then
+			fatal_error "No se pudo determinar una IPv4 para este nodo"
+		fi
+	fi
 fi
 
-add_to_file "${nodefile}" "Port = ${port:-${PORT}}"
-
-# descubrir nodos en la misma LAN
-add_to_file "${nodefile}" "LocalDiscovery = yes"
-
-# Tinc para android necesita especificar la shell con la que se corren los
-# scripts
-${android} && add_to_file "${nodefile}" "ScriptsInterpreter = /system/bin/sh"
-# Y además el dispositivo tun
-${android} && add_to_file "${nodefile}" "Device = /dev/tun"
-
-if [ ! -z "${LVPN_SUBNET}" ]; then
-  $verbose && msg "Determinando la IPv4 del nodo..."
-  if [ -z "${localnet}" ] ; then
-      localnet="${localnet} $(get_ipv4)"
-
-      if [ $? -ne 0 ]; then
-          fatal_error "No se pudo determinar una IPv4 para este nodo"
-      fi
-  fi
-fi
-
-$verbose && msg "Generando IPv6..."
-localnet="${localnet} $(get_ipv6)"
-
-$verbose && msg "Añadiendo subredes..."
-for _subnet in ${localnet} ${subnets}; do
-    add_to_file "${nodefile}" "Subnet = ${_subnet}"
-done
+$arg_verbose && msg "Generando IPv6..."
+arg_localnets+=($(get_ipv6))
 
 # Si se anuncia otra subnet, el nodo actua como router, pero se pierden
 # servicios como avahi
-if [ -z "${subnets}" ]; then
-    mode="switch"
+if [ ${#arg_subnets[@]} = 0 ]; then
+	mode="switch"
 else
-    mode="router"
+	mode="router"
 fi
-$verbose && msg "Este nodo es un %s" "*${mode}*"
+$arg_verbose && msg "Este nodo es un %s" "*${mode}*"
 
-$verbose && msg "Generando %s..." "*${conffile}*"
-add_to_file "${conffile}" "Name = ${nodename}"
-add_to_file "${conffile}" "Mode = ${mode}"
-add_to_file "${conffile}" "GraphDumpFile = /tmp/${NETWORK}.dot"
+######################################################################
 
-$verbose && msg "Añadiendo hosts..."
-if [ -n "${connectto}" ]; then
-    ${LVPN} connectto ${nodename} ${connectto}
+$arg_verbose && msg "Generando %s..." "*${nodefile}*"
+{
+	echo "# ${nodename}"
+	get_id
+
+	for address in "${arg_addresses[@]}"; do
+		echo "Address = ${address}"
+	done
+	if [ ${#arg_addresses[@]} = 0 ]; then
+		$arg_verbose && warning "El nodo no tiene una dirección pública, se configura como cliente"
+		# Cuando no tenemos una dirección pública probablemente estemos detrás
+		# de un firewall, esto le indica a los demás nodos que no traten de
+		# conectarse directamente sino que nos envíen paquetes a través de un
+		# nodo al que estemos conectados.
+		echo "IndirectData = yes"
+
+		PORT=$(until test ${r:-0} -gt 20000; do r=${RANDOM}; done; echo $r)
+		$arg_verbose && msg "Utilizando puerto al azar %s" "*${PORT}*"
+	fi
+
+	echo "Port = ${arg_port:-$PORT}"
+
+	# descubrir nodos en la misma LAN
+	echo "LocalDiscovery = yes"
+
+	# Tinc para android necesita especificar la shell con la que se corren los
+	# scripts
+	if $arg_android; then
+		echo "ScriptsInterpreter = /system/bin/sh"
+		# Y además el dispositivo tun
+		echo "Device = /dev/tun"
+	fi
+
+	$arg_verbose && msg "Añadiendo subredes..."
+	for subnet in "${arg_localnets[@]}" "${arg_subnets[@]}"; do
+		echo "Subnet = ${subnet}"
+	done
+} > "$nodefile"
+
+$arg_verbose && msg "Generando %s..." "*${conffile}*"
+{
+	echo "Name = ${nodename}"
+	echo "Mode = ${mode}"
+	echo "GraphDumpFile = /tmp/${NETWORK}.dot"
+} > "$conffile"
+
+$arg_verbose && msg "Añadiendo hosts..."
+if [ ${#arg_connectto[@]} -gt 0 ]; then
+	${LVPN} connectto "${nodename}" "${arg_connectto[@]}"
 fi
 
 # Copiar los scripts de inicio
-$verbose && msg "Copiando el resto de archivos..."
-if ${android} ; then
-# El sistema por defecto de Android es muy limitado, si no tiene busybox no hay
-# prácticamente nada
-  cp "${LVPN_LIBDIR}"/skel/android/tinc-up "${nodedir}"
-# Hardcodear la primera subnet sin notación cidr
-  sed -e "s/{{LVPN_SUBNET}}/${localnet%%/*}/g" \
-      -i "${nodedir}/tinc-up"
+$arg_verbose && msg "Copiando el resto de archivos..."
+if ${arg_android} ; then
+	# El sistema por defecto de Android es muy limitado, si no tiene busybox no hay
+	# prácticamente nada
+	cp "${LVPN_LIBDIR}"/skel/android/tinc-up "${nodedir}"
+	# Hardcodear la primera subnet sin notación cidr
+	sed -e "s/{{LVPN_SUBNET}}/${localnet%%/*}/g" \
+	    -i "${nodedir}/tinc-up"
 else
-  cp "${LVPN_LIBDIR}"/skel/tinc-{up,down} "${nodedir}"
-  sed -e "s,{{LVPN_SUBNET}},${LVPN_SUBNET},g" \
-      -e "s,{{LVPN_SUBNET6}},${LVPN_SUBNET6},g" \
-      -i "${nodedir}/tinc-up"
+	cp "${LVPN_LIBDIR}"/skel/tinc-{up,down} "${nodedir}"
+	sed -e "s,{{LVPN_SUBNET}},${LVPN_SUBNET},g" \
+	    -e "s,{{LVPN_SUBNET6}},${LVPN_SUBNET6},g" \
+	    -i "${nodedir}/tinc-up"
 fi
 
-if ${subnetup} ; then
-    cp "${LVPN_LIBDIR}"/skel/subnet-{up,down} "${nodedir}"
+if ${arg_subnetup} ; then
+	cp "${LVPN_LIBDIR}"/skel/subnet-{up,down} "${nodedir}"
 fi
 
-$verbose && msg "Generando llaves..."
+$arg_verbose && msg "Generando llaves..."
 echo -e "\n" | tincd -c "${nodedir}" --generate-keys=${KEYSIZE}
 
 # Sólo guardar el host si podemos escribir en hosts
 if test -w "${LVPN_HOSTS}"; then
-  $verbose && msg "Guardando el archivo de host con los demás nodos"
-  cp "${nodefile}" "${LVPN_HOSTS}"
+	$arg_verbose && msg "Guardando el archivo de host con los demás nodos"
+	cp "${nodefile}" "${LVPN_HOSTS}"
 fi
 
 cp --force "${LVPN_LIBDIR}/skel/run-script" "${nodedir}/"
 
-$install && ${LVPN} install ${nodename}
+if $arg_install; then
+	${LVPN} install ${nodename}
+fi
 
 msg "El nodo se ha creado con éxito"
 msg "*Importante*: "
